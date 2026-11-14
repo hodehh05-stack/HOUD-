@@ -1,26 +1,41 @@
-[app]
 
-title = HOUD
-package.name = houd
-package.domain = org.houd
+name: Build HOUD APK
 
-source.dir = .
-source.include_exts = py,jpg,png,kv
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
-version = 1.0
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
 
-requirements = python3,kivy
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3-pip \
+            build-essential \
+            git \
+            zip \
+            unzip \
+            openjdk-17-jdk
 
-orientation = portrait
-fullscreen = 0
+      - name: Install Buildozer
+        run: |
+          pip3 install --user buildozer cython==0.29.36
 
-android.permissions = INTERNET
+      - name: Build APK
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          buildozer android debug
 
-android.api = 35
-android.minapi = 23
-android.archs = arm64-v8a
-
-[buildozer]
-
-log_level = 2
-warn_on_root = 1
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: HOUD-APK
+          path: bin/*.apk
